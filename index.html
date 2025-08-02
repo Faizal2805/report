@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLMKit - Interactive Strategic Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Tech -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive narrative. It starts with a high-level value proposition (Hero), moves to the core problem/solution via an interactive diagram, then allows for competitive analysis with a dynamic radar chart. It then grounds the project in its target market with a dashboard for the 'India Opportunity' and an interactive 'Sectoral Impact Explorer'. It concludes with a 'Roadmap' timeline. This structure transforms the dense report into an exploratory journey, making complex information digestible and engaging, guiding the user from 'what' and 'why' to 'how' and 'when'. -->
+    <!-- Visualization & Content Choices: 1. Core Problems: Interactive HTML/CSS diagram. Goal: Organize/Inform. Interaction: Click to reveal solution. Justification: More engaging than a list. 2. Competitive Matrix: Radar Chart (Chart.js). Goal: Compare. Interaction: Buttons to toggle competitors. Justification: Ideal for multi-dimensional comparison. 3. Sectoral Impact: Bar Chart (Chart.js). Goal: Explore Relationships. Interaction: Sector buttons filter chart data. Justification: Turns a static table into an exploratory tool. 4. Roadmap: HTML/CSS Timeline. Goal: Show Change. Interaction: Click to expand details. Justification: Intuitive way to present a plan. All choices prioritize interaction and clarity over static text. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #3D3D3D;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #D97706;
+            border-bottom-color: #D97706;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .problem-node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .problem-node:hover {
+            transform: scale(1.05);
+            background-color: #FBBF24;
+        }
+        .problem-node.active {
+            background-color: #D97706;
+            color: white;
+            transform: scale(1.1);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: -20px;
+            width: 10px;
+            height: 10px;
+            background-color: #FBBF24;
+            border-radius: 50%;
+            border: 2px solid #FDFBF8;
+        }
+        .timeline-item {
+            border-left: 2px solid #FBBF24;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-amber-600">LLMKit</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#solution" class="nav-link pb-1">Solutions</a>
+                <a href="#market" class="nav-link pb-1">Market</a>
+                <a href="#impact" class="nav-link pb-1">Impact</a>
+                <a href="#roadmap" class="nav-link pb-1">Roadmap</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="py-20 md:py-32 bg-amber-50">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-gray-800 leading-tight">The Foundational Toolkit for India's AI Revolution</h1>
+                <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">LLMKit is a comprehensive, open-source Python toolkit designed to eliminate boilerplate, unify multiple LLM providers, and empower developers to build reliable, production-grade AI applications with unprecedented speed and control.</p>
+                <div class="mt-10 flex justify-center space-x-4">
+                    <a href="#solution" class="px-8 py-3 bg-amber-600 text-white font-semibold rounded-lg shadow-md hover:bg-amber-700 transition">Explore Features</a>
+                    <a href="#market" class="px-8 py-3 bg-white text-amber-600 font-semibold rounded-lg shadow-md hover:bg-gray-100 transition">See the Opportunity</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="solution" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold">Solving Real-World AI Engineering Challenges</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">AI development is filled with repetitive and complex problems. LLMKit provides plug-and-play solutions for the most critical pain points, turning weeks of work into hours. Click on a problem to see the LLMKit solution.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <div id="problem-list" class="flex flex-col space-y-3 md:col-span-1">
+                    </div>
+                    <div class="md:col-span-2 glass-card rounded-xl p-8 min-h-[300px] flex flex-col justify-center">
+                        <h3 id="solution-title" class="text-2xl font-bold text-amber-700 mb-4">Select a Problem</h3>
+                        <p id="solution-text" class="text-gray-700 text-lg">The details of the selected solution will appear here. Explore the common challenges AI engineers face and see how LLMKit provides a robust, out-of-the-box fix.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold">LLMKit vs. The World: A Clear Advantage</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">How does LLMKit stack up against other tools? While others focus on complex abstractions, LLMKit prioritizes production reliability, cost control, and developer experience. Select competitors to compare.</p>
+                </div>
+                <div class="flex justify-center mb-8 space-x-2">
+                    <button id="compare-all" class="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg shadow-sm hover:bg-amber-700 transition">Compare All</button>
+                    <button class="competitor-toggle px-4 py-2 bg-white font-semibold rounded-lg shadow-sm hover:bg-gray-100 transition" data-competitor="LangChain">LangChain</button>
+                    <button class="competitor-toggle px-4 py-2 bg-white font-semibold rounded-lg shadow-sm hover:bg-gray-100 transition" data-competitor="LlamaIndex">LlamaIndex</button>
+                    <button class="competitor-toggle px-4 py-2 bg-white font-semibold rounded-lg shadow-sm hover:bg-gray-100 transition" data-competitor="LiteLLM">LiteLLM</button>
+                </div>
+                <div class="chart-container mx-auto">
+                    <canvas id="competitorChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="market" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold">The India Opportunity: A Perfect Storm for Growth</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">India's unique combination of government support, a massive developer population, and a hyper-competitive startup ecosystem creates the ideal environment for a tool like LLMKit to thrive.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <div class="glass-card p-8 rounded-xl">
+                        <div class="text-5xl font-bold text-amber-600">18k+</div>
+                        <h3 class="mt-4 text-xl font-semibold">Public GPUs</h3>
+                        <p class="mt-2 text-gray-600">The IndiaAI Mission provides subsidized compute, fueling an explosion in AI development and experimentation.</p>
+                    </div>
+                    <div class="glass-card p-8 rounded-xl">
+                        <div class="text-5xl font-bold text-amber-600">#1</div>
+                        <h3 class="mt-4 text-xl font-semibold">in AI Skill Penetration</h3>
+                        <p class="mt-2 text-gray-600">India's developer population is the world's fastest-growing and most skilled in AI, creating a huge addressable market.</p>
+                    </div>
+                    <div class="glass-card p-8 rounded-xl">
+                        <div class="text-5xl font-bold text-amber-600">3.6x</div>
+                        <h3 class="mt-4 text-xl font-semibold">GenAI Startup Growth</h3>
+                        <p class="mt-2 text-gray-600">A thriving, competitive startup scene needs tools that accelerate development and control costs to survive and scale.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="py-20 bg-amber-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold">Sectoral Impact Explorer</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">LLMKit is a horizontal enabler, accelerating innovation across all of India's critical sectors. Select a sector to see how LLMKit's features provide targeted solutions.</p>
+                </div>
+                <div class="flex flex-wrap justify-center gap-3 mb-10">
+                    <button class="sector-btn px-5 py-2 font-semibold rounded-lg shadow-sm transition" data-sector="Healthcare">Healthcare</button>
+                    <button class="sector-btn px-5 py-2 font-semibold rounded-lg shadow-sm transition" data-sector="Education">Education</button>
+                    <button class="sector-btn px-5 py-2 font-semibold rounded-lg shadow-sm transition" data-sector="Financial Inclusion">Financial Inclusion</button>
+                    <button class="sector-btn px-5 py-2 font-semibold rounded-lg shadow-sm transition" data-sector="Retail">Retail & Commerce</button>
+                    <button class="sector-btn px-5 py-2 font-semibold rounded-lg shadow-sm transition" data-sector="Startups">Startups / Open Innovation</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
+                    <div class="md:col-span-2">
+                        <h3 id="sector-title" class="text-2xl font-bold mb-4">Healthcare</h3>
+                        <p id="sector-description" class="text-gray-700">In high-stakes domains like healthcare, reliability is non-negotiable. Mission-critical features like Smart Retry/Fallback are essential for diagnostic tools where API failures are unacceptable. Cost management is also crucial for at-scale public health deployments.</p>
+                    </div>
+                    <div class="md:col-span-3 chart-container mx-auto">
+                        <canvas id="sectorImpactChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold">Project Roadmap: From Foundation to Community</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">LLMKit's development is planned in distinct phases, focusing first on a rock-solid foundation and then expanding to advanced features, polish, and community-driven growth.</p>
+                </div>
+                <div class="max-w-3xl mx-auto">
+                    <div class="relative pl-8">
+                        <div class="timeline-item p-6 mb-8 bg-white rounded-lg shadow-md cursor-pointer" data-phase="1">
+                            <h4 class="font-bold text-lg text-amber-700">Phase 1: Core Foundation (4 weeks)</h4>
+                            <p class="text-gray-600 hidden">Provider abstraction layer, basic retry logic, token management, and a simple CLI. The focus is on creating a stable, reliable core.</p>
+                        </div>
+                        <div class="timeline-item p-6 mb-8 bg-white rounded-lg shadow-md cursor-pointer" data-phase="2">
+                            <h4 class="font-bold text-lg text-amber-700">Phase 2: Advanced Features (6 weeks)</h4>
+                            <p class="text-gray-600 hidden">Building the template system, response parsing, batch processing capabilities, and conversation memory for more complex applications.</p>
+                        </div>
+                        <div class="timeline-item p-6 mb-8 bg-white rounded-lg shadow-md cursor-pointer" data-phase="3">
+                            <h4 class="font-bold text-lg text-amber-700">Phase 3: Enhancement & Polish (4 weeks)</h4>
+                            <p class="text-gray-600 hidden">Adding a universal function calling interface, advanced semantic caching, performance optimization, and comprehensive documentation.</p>
+                        </div>
+                        <div class="timeline-item p-6 bg-white rounded-lg shadow-md cursor-pointer" data-phase="4">
+                            <h4 class="font-bold text-lg text-amber-700">Phase 4: Community & Enterprise (Ongoing)</h4>
+                            <p class="text-gray-600 hidden">Developing a plugin system, adding enterprise-grade features, fostering community contributions, and integrating with the broader ecosystem.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-10">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-2xl font-bold">LLMKit</h3>
+            <p class="mt-2 text-gray-400">Building the future of AI in India, one reliable application at a time.</p>
+            <p class="mt-6 text-sm text-gray-500">&copy; 2025 LLMKit Project. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const problemsAndSolutions = [
+                { problem: "LLM Response Reliability", solution: "Smart retry wrapper with exponential backoff and provider fallback to handle unpredictable failures, rate limits, and timeouts automatically." },
+                { problem: "Token & Cost Management", solution: "A unified token counter with real-time cost estimation and context trimming, providing full visibility into usage and spending." },
+                { problem: "Prompt Template Chaos", solution: "An integrated template system with version control and performance tracking to manage prompts as a disciplined engineering practice." },
+                { problem: "Inconsistent Response Parsing", solution: "Schema-based parsing using Pydantic, with automatic format correction to reliably extract structured data from LLM responses." },
+                { problem: "Multi-Provider Friction", solution: "A unified interface that abstracts away different provider APIs, with automatic parameter translation and error normalization." },
+                { problem: "Complex Conversation History", solution: "A smart memory system with automatic summarization strategies to effectively manage context in long-running conversations." },
+                { problem: "Batch Processing Headaches", solution: "An intelligent batch processor with queue management to process large datasets efficiently while respecting provider rate limits." },
+                { problem: "Expensive, Repeated API Calls", solution: "Advanced semantic caching with similarity matching to reduce latency and cost by reusing answers for similar prompts." },
+                { problem: "Fragmented Function Calling", solution: "A universal function calling interface that simplifies the integration of external tools and functions across all providers." },
+                { problem: "Lack of CLI Accessibility", solution: "A comprehensive command-line interface for quick testing and performing common LLM operations without writing code." }
+            ];
+
+            const problemListContainer = document.getElementById('problem-list');
+            const solutionTitle = document.getElementById('solution-title');
+            const solutionText = document.getElementById('solution-text');
+
+            problemsAndSolutions.forEach((item, index) => {
+                const button = document.createElement('button');
+                button.className = 'problem-node text-left w-full p-4 rounded-lg bg-white shadow-sm font-semibold text-gray-700';
+                button.textContent = item.problem;
+                button.dataset.index = index;
+                problemListContainer.appendChild(button);
+            });
+
+            const problemNodes = document.querySelectorAll('.problem-node');
+            problemNodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    problemNodes.forEach(n => n.classList.remove('active'));
+                    node.classList.add('active');
+                    const data = problemsAndSolutions[node.dataset.index];
+                    solutionTitle.textContent = data.problem;
+                    solutionText.textContent = data.solution;
+                });
+            });
+            if(problemNodes.length > 0) problemNodes[0].click();
+
+            const competitorData = {
+                labels: ['Provider Unification', 'Reliability', 'Cost Management', 'Performance Opt.', 'Developer Experience'],
+                datasets: [
+                    {
+                        label: 'LLMKit',
+                        data: [5, 5, 5, 4, 5],
+                        backgroundColor: 'rgba(217, 119, 6, 0.2)',
+                        borderColor: 'rgba(217, 119, 6, 1)',
+                        pointBackgroundColor: 'rgba(217, 119, 6, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(217, 119, 6, 1)',
+                        hidden: false
+                    },
+                    {
+                        label: 'LangChain',
+                        data: [4, 2, 2, 2, 2],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                        hidden: true
+                    },
+                    {
+                        label: 'LlamaIndex',
+                        data: [4, 2, 2, 3, 3],
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(16, 185, 129, 1)',
+                        hidden: true
+                    },
+                    {
+                        label: 'LiteLLM',
+                        data: [5, 4, 3, 1, 4],
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(139, 92, 246, 1)',
+                        hidden: true
+                    }
+                ]
+            };
+
+            const competitorChartCtx = document.getElementById('competitorChart').getContext('2d');
+            const competitorChart = new Chart(competitorChartCtx, {
+                type: 'radar',
+                data: competitorData,
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0,0,0,0.1)' },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            pointLabels: { font: { size: 12 } },
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            ticks: {
+                                stepSize: 1,
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.r !== null) {
+                                        label += context.parsed.r;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.querySelectorAll('.competitor-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const competitorName = button.dataset.competitor;
+                    const dataset = competitorChart.data.datasets.find(ds => ds.label === competitorName);
+                    if (dataset) {
+                        dataset.hidden = !dataset.hidden;
+                        button.classList.toggle('bg-amber-200');
+                        button.classList.toggle('bg-white');
+                        competitorChart.update();
+                    }
+                });
+            });
+
+            document.getElementById('compare-all').addEventListener('click', () => {
+                competitorChart.data.datasets.forEach(ds => ds.hidden = false);
+                document.querySelectorAll('.competitor-toggle').forEach(b => b.classList.add('bg-amber-200'));
+                competitorChart.update();
+            });
+
+            const sectorImpactData = {
+                labels: ['Multi-Provider', 'Retry/Fallback', 'Cost Mgmt', 'Caching', 'Templating', 'CLI'],
+                datasets: {
+                    'Healthcare': { data: [3, 5, 5, 3, 3, 3], description: "In high-stakes domains like healthcare, reliability is non-negotiable. Mission-critical features like Smart Retry/Fallback are essential for diagnostic tools where API failures are unacceptable. Cost management is also crucial for at-scale public health deployments." },
+                    'Education': { data: [5, 3, 5, 3, 5, 3], description: "Education requires reaching a diverse, multilingual population. Multi-provider abstraction is critical for blending global and local Indic language models. Template management is key for creating versioned educational content." },
+                    'Financial Inclusion': { data: [3, 5, 5, 3, 3, 1], description: "Trust and high availability are paramount. Smart Retry/Fallback is essential for real-time fraud detection and credit scoring. Detailed cost management enables precise cost-per-transaction analysis for financial products." },
+                    'Retail': { data: [5, 3, 5, 5, 5, 3], description: "This hyper-competitive sector demands agility. Multi-provider support allows A/B testing new models for personalization, while semantic caching and cost management directly impact margins and performance." },
+                    'Startups': { data: [5, 5, 5, 5, 5, 5], description: "For startups, agility and managing burn rate are survival-critical. Every LLMKit feature, from avoiding provider lock-in to meticulous cost tracking, provides a direct competitive advantage and extends runway." }
+                }
+            };
+            
+            const sectorImpactCtx = document.getElementById('sectorImpactChart').getContext('2d');
+            const sectorImpactChart = new Chart(sectorImpactCtx, {
+                type: 'bar',
+                data: {
+                    labels: sectorImpactData.labels,
+                    datasets: [{
+                        label: 'Impact Score (1-5)',
+                        data: sectorImpactData.datasets['Healthcare'].data,
+                        backgroundColor: 'rgba(217, 119, 6, 0.6)',
+                        borderColor: 'rgba(217, 119, 6, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 5,
+                            grid: { display: false }
+                        },
+                        y: {
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            const sectorBtns = document.querySelectorAll('.sector-btn');
+            const sectorTitle = document.getElementById('sector-title');
+            const sectorDescription = document.getElementById('sector-description');
+
+            sectorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sectorBtns.forEach(b => {
+                        b.classList.remove('bg-amber-600', 'text-white');
+                        b.classList.add('bg-white');
+                    });
+                    btn.classList.add('bg-amber-600', 'text-white');
+                    btn.classList.remove('bg-white');
+                    
+                    const sectorName = btn.dataset.sector;
+                    const data = sectorImpactData.datasets[sectorName];
+                    sectorTitle.textContent = sectorName.replace(/([A-Z])/g, ' $1').trim();
+                    sectorDescription.textContent = data.description;
+                    sectorImpactChart.data.datasets[0].data = data.data;
+                    sectorImpactChart.update();
+                });
+            });
+            document.querySelector('.sector-btn[data-sector="Healthcare"]').click();
+
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            timelineItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const content = item.querySelector('p');
+                    const isHidden = content.classList.contains('hidden');
+                    
+                    timelineItems.forEach(i => i.querySelector('p').classList.add('hidden'));
+                    
+                    if (isHidden) {
+                        content.classList.remove('hidden');
+                    }
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 60) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
